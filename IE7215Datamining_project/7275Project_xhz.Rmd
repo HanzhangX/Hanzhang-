@@ -1,0 +1,1078 @@
+
+
+```{r}
+#Read the Data
+caravan_df_maindataset <- read.csv('C:/Users/45336/Desktop/7275project/Master_dataset.csv')
+caravan_df_test <- read.csv('C:/Users/45336/Desktop/7275project/test.csv')
+caravan_df_train <- read.csv('C:/Users/45336/Desktop/7275project/train.csv')
+
+
+```
+
+
+
+```{r}
+#Check Shape of Data and List Out All Columns
+str(caravan_df_maindataset)
+
+
+#Sample of the Data
+head(caravan_df_maindataset)
+
+# Ensure there are no missing values.
+paste0("Missing values: ", sum(is.na(caravan_df_maindataset)))
+
+# Finding which features are numeric.
+numeric_caravan <- which(sapply(caravan_df_maindataset,is.numeric))
+str(caravan_df_maindataset[,numeric_caravan])
+
+```
+
+
+```{r}
+
+caravan_df_maindataset$Number_of_mobile_home_policies <- factor(caravan_df_maindataset$Number_of_mobile_home_policies, labels=c(0,1))
+```
+
+
+```{r}
+
+library(ggplot2)
+library(plyr)
+
+
+Not_Insured_with_caravan  <- sum(caravan_df_maindataset$Number_of_mobile_home_policies == 0)
+Insured_with_caravan <- sum(caravan_df_maindataset$Number_of_mobile_home_policies == 1)
+
+dat <- data.frame(
+  Policy_status = factor(c("Not_Insured_with_caravan","Insured_with_caravan"), levels=c("Not_Insured_with_caravan","Insured_with_caravan")),
+  Count = c( Not_Insured_with_caravan , Insured_with_caravan)
+)
+
+ggplot(data=dat, aes(x=Policy_status, y=Count, fill=Policy_status)) +
+  geom_bar(colour="black", stat="identity")
+```
+
+```{r}
+Frequency.Number_of_mobile_home_policies <- data.frame(Number_of_mobile_home_policies = levels(caravan_df_maindataset$Number_of_mobile_home_policies), Count = as.numeric(table(caravan_df_maindataset$Number_of_mobile_home_policies)))
+Frequency.Number_of_mobile_home_policies
+```
+
+```{r}
+TrainDataset <- read.csv('C:/Users/45336/Desktop/7275project/Master_dataset.csv')
+
+car_policies <- sum(TrainDataset$Number_of_mobile_home_policies == 1 & TrainDataset$car_policies  != 0)
+Income_30K <- sum(TrainDataset$Number_of_mobile_home_policies == 1 & TrainDataset$Income_._30  != 0)
+moped_policies <- sum(TrainDataset$Number_of_mobile_home_policies == 1 & TrainDataset$moped_policies  != 0)
+fire_policies <- sum(TrainDataset$Number_of_mobile_home_policies == 1 & TrainDataset$fire_policies  != 0)
+Lower_level_education <- sum(TrainDataset$Number_of_mobile_home_policies == 1 & TrainDataset$Lower_level_education  != 0)
+
+
+dat <- data.frame(
+  Selected_Features = factor(c("car_policies" , "Income_30K " , "moped_policies" , "fire_policies"  , "Lower_level_education" ), levels=c("car_policies" , "Income_30K " , "moped_policies" , "fire_policies"  , "Lower_level_education")),
+  Count = c( car_policies  ,  Income_30K  , moped_policies , fire_policies  , Lower_level_education )
+)
+
+ggplot(data=dat, aes(x=Selected_Features, y=Count, fill=Selected_Features)) +
+  geom_bar(colour="black", stat="identity")
+```
+
+```{r}
+No_of_boat_policies <- sum(TrainDataset$Number_of_mobile_home_policies == 1 & TrainDataset$Number_of_boat_policies != 0)
+Married <- sum(TrainDataset$Number_of_mobile_home_policies == 1 & TrainDataset$Married  != 0)
+Other_relation <- sum(TrainDataset$Number_of_mobile_home_policies == 1 & TrainDataset$Other_relation  != 0)
+boat_policies <- sum(TrainDataset$Number_of_mobile_home_policies == 1 & TrainDataset$boat_policies  != 0)
+Skilled_labourers <- sum(TrainDataset$Number_of_mobile_home_policies == 1 & TrainDataset$Skilled_labourers  != 0)
+
+Lower_level_education <- sum(TrainDataset$Number_of_mobile_home_policies == 1 & TrainDataset$Lower_level_education  != 0)
+
+
+dat <- data.frame(
+  Selected_Features = factor(c("No_of_boat_policies","Married" , "Other_relation" , "boat_policies" , "Skilled_labourers"  , "Lower_level_education" ), levels=c("No_of_boat_policies","Married" , "Other_relation" , "boat_policies" , "Skilled_labourers"  , "Lower_level_education")),
+  Count = c(No_of_boat_policies, Married , Other_relation , boat_policies , Skilled_labourers, Lower_level_education)
+)
+
+ggplot(data=dat, aes(x=Selected_Features, y=Count, fill=Selected_Features)) +
+  geom_bar(colour="black", stat="identity")
+```
+
+```{r}
+#Association Rule Mining
+library(arules)
+library(arulesViz)
+
+train <- read.csv('C:/Users/45336/Desktop/7275project/test.csv', colClasses=c(rep('factor' , 86)))
+
+## Association rule generation
+rules <- apriori(data = train , parameter = list( supp = 0.001 , conf = 0.7) , appearance = list(default = "lhs" , rhs = "Number_of_mobile_home_policies=1") )
+
+## Sorting rules based on confidence
+rules <- sort(rules , decreasing = TRUE , by = 'confidence')
+
+## Printing the rules
+inspect(rules)
+```
+
+```{r}
+## Ploting the generated rules
+plot(rules)
+```
+
+```{r}
+
+#Re-running association rules with support = 0.0012 and confidence = 0.9
+## Association rule generation
+rules <- apriori(data = train , parameter = list( supp = 0.0012 , conf = 0.9) , appearance = list(default = "lhs" , rhs = "Number_of_mobile_home_policies=1") )
+
+## Sorting rules based on confidence
+rules <- sort(rules , decreasing = TRUE , by = 'confidence')
+
+## Printing the rules
+inspect(rules)
+```
+
+Explore
+
+
+```{r}
+probabilityDF <- data.frame(matrix(ncol = 20, nrow = 4000))
+```
+
+```{r}
+#LR Pre-Processing
+caravan_df_trainLR <- caravan_df_train
+caravan_df_testLR <- caravan_df_test
+caravan_df_trainLR$Number_of_mobile_home_policies <- factor(caravan_df_trainLR$Number_of_mobile_home_policies, labels = c(0,1))
+library(dummies)
+caravan_df_trainLR <- dummy.data.frame(caravan_df_trainLR, sep = ".", names = c("Customer_main_type","Customer_Subtype"))
+caravan_df_testLR <- dummy.data.frame(caravan_df_testLR, sep = ".", names = c("Customer_main_type","Customer_Subtype"))
+```
+
+```{r}
+#Classify Using Logistic Regression
+logisticTrainingFit <- glm(Number_of_mobile_home_policies ~ ., family = "binomial", data = caravan_df_trainLR)
+logisticTrainingFit
+```
+```{r}
+
+#Predict Class And Display Confusion Matrix
+LOutPredicted <- predict(logisticTrainingFit, caravan_df_testLR, type = "response")
+LOutPredictedClass <- ifelse(LOutPredicted>0.5, 1, 0)
+LOutActual <- caravan_df_testLR$Number_of_mobile_home_policies
+LConfusionOutPredicted <- table(LOutActual, LOutPredictedClass)
+rownames(LConfusionOutPredicted) <- c("0","1")
+colnames(LConfusionOutPredicted) <- c("0","1")
+LConfusionOutPredicted
+for (i in 1:4000){
+    probabilityDF$LR[i] <- LOutPredicted[i]
+    }
+```
+
+```{r}
+
+# Plot ROC and AUC for LR
+probs <- LOutPredicted
+library(ROCR)
+LRPred <- prediction(probs, caravan_df_testLR$Number_of_mobile_home_policies)
+LRPerf <- performance(LRPred, "tpr", "fpr")
+plot(LRPerf, colorize=TRUE)
+abline(a=0, b=1, lty=2, lwd=3, col="black")
+```
+
+```{r}
+#AUC
+performance(LRPred, "auc")
+```
+```{r}
+
+#Corresponding Performance Measures
+LRPrediction <- factor(as.factor(LOutPredictedClass), c(0, 1), labels = c("Not Purchased", "Purchased"))
+LRActual <- factor(as.factor(caravan_df_testLR$Number_of_mobile_home_policies), c(0, 1), labels = c("Not Purchased", "Purchased"))
+library(crossval)
+CMLR <- confusionMatrix(LRActual, LRPrediction, negative = "Not Purchased" )
+diagnosticErrors(CMLR)
+```
+
+```{r}
+#Under Sampling Data
+#Taking all the observations with dependent variable = 1
+caravan_df_train_LR_Under <- caravan_df_trainLR[caravan_df_trainLR$Number_of_mobile_home_policies==1,]
+
+#Randomly select observations with dependent variable = 0
+zeroObs <- caravan_df_trainLR[caravan_df_trainLR$Number_of_mobile_home_policies==0,]
+set.seed(123457)
+rearrangedZeroObs <-  zeroObs[sample(nrow(zeroObs), length(caravan_df_train_LR_Under$Number_of_mobile_home_policies)),]
+
+#Appending rows of randomly selected 0s in our undersampled data frame
+caravan_df_train_LR_Under <- rbind(caravan_df_train_LR_Under, rearrangedZeroObs)
+
+#Let's verify that number of 1s and 0s in our undersampled data are equal
+undersampled.Frequency.Number_of_mobile_home_policies <- data.frame(Number_of_mobile_home_policies = levels(as.factor(caravan_df_train_LR_Under$Number_of_mobile_home_policies)), Count = as.numeric(table(caravan_df_train_LR_Under$Number_of_mobile_home_policies)))
+undersampled.Frequency.Number_of_mobile_home_policies
+```
+```{r}
+#Classify Using Logistic Regression with Undersampling
+logisticTrainingFit <- glm(Number_of_mobile_home_policies ~ ., family = "binomial", data = caravan_df_train_LR_Under)
+logisticTrainingFit
+```
+
+```{r}
+#Predict Class And Display Confusion Matrix
+LOutPredicted <- predict(logisticTrainingFit, caravan_df_testLR, type = "response")
+LOutPredictedClass <- ifelse(LOutPredicted>0.5, 1, 0)
+LOutActual <- caravan_df_testLR$Number_of_mobile_home_policies
+LConfusionOutPredicted <- table(LOutActual, LOutPredictedClass)
+rownames(LConfusionOutPredicted) <- c("0","1")
+colnames(LConfusionOutPredicted) <- c("0","1")
+LConfusionOutPredicted
+for (i in 1:4000){
+    probabilityDF$LRU[i] <- LOutPredicted[i]
+    }
+
+```
+
+```{r}
+# Plot ROC and AUC for LR
+probs <- LOutPredicted
+library(ROCR)
+LRPred <- prediction(probs, caravan_df_testLR$Number_of_mobile_home_policies)
+LRPerf <- performance(LRPred, "tpr", "fpr")
+plot(LRPerf, colorize=TRUE)
+abline(a=0, b=1, lty=2, lwd=3, col="black")
+```
+
+```{r}
+#AUC
+performance(LRPred, "auc")
+```
+
+```{r}
+
+#Corresponding Performance Measures
+LRPrediction <- factor(as.factor(LOutPredictedClass), c(0, 1), labels = c("Not Purchased", "Purchased"))
+LRActual <- factor(as.factor(caravan_df_testLR$Number_of_mobile_home_policies), c(0, 1), labels = c("Not Purchased", "Purchased"))
+library(crossval)
+CMLR <- confusionMatrix(LRActual, LRPrediction, negative = "Not Purchased" )
+diagnosticErrors(CMLR)
+```
+
+```{r}
+#First let's recall the ratio of 1s and 0s in our original training dataset
+paste0("Ratio of 1s to 0s- 1:", as.numeric(table(caravan_df_trainLR$Number_of_mobile_home_policies))[1]/as.numeric(table(caravan_df_trainLR$Number_of_mobile_home_policies))[2])
+```
+
+```{r}
+
+#Now let's duplicate the observations with dependent variable = 1 to make the ratio approximately 1:2
+caravan_df_train_LR_OverDummy <- caravan_df_trainLR[caravan_df_trainLR$Number_of_mobile_home_policies==1,]
+caravan_df_train_LR_Over <- NULL
+for (i in 1:7){
+    caravan_df_train_LR_Over <- rbind(caravan_df_train_LR_Over, caravan_df_train_LR_OverDummy)
+}
+caravan_df_train_LR_Over <- rbind(caravan_df_train_LR_Over, caravan_df_trainLR[caravan_df_trainLR$Number_of_mobile_home_policies==0,])
+#Let's verify the number of 1s and 0s in our oversampled data
+oversampled.Frequency.Number_of_mobile_home_policies <- data.frame(Number_of_mobile_home_policies = levels(as.factor(caravan_df_train_LR_Over$Number_of_mobile_home_policies)), Count = as.numeric(table(caravan_df_train_LR_Over$Number_of_mobile_home_policies)))
+oversampled.Frequency.Number_of_mobile_home_policies
+```
+
+```{r}
+#Let's verify the ratio of 1s to 0s after over sampling
+paste0("Ratio of 1s to 0s After Oversampling- 1:", as.numeric(table(caravan_df_train_LR_Over$Number_of_mobile_home_policies))[1]/as.numeric(table(caravan_df_train_LR_Over$Number_of_mobile_home_policies))[2])
+```
+
+```{r}
+#Classify Using Logistic Regression with Oversampling
+logisticTrainingFit <- glm(Number_of_mobile_home_policies ~ ., family = "binomial", data = caravan_df_train_LR_Over)
+logisticTrainingFit
+```
+```{r}
+#Predict Class And Display Confusion Matrix
+LOutPredicted <- predict(logisticTrainingFit, caravan_df_testLR, type = "response")
+LOutPredictedClass <- ifelse(LOutPredicted>0.5, 1, 0)
+LOutActual <- caravan_df_testLR$Number_of_mobile_home_policies
+LConfusionOutPredicted <- table(LOutActual, LOutPredictedClass)
+rownames(LConfusionOutPredicted) <- c("0","1")
+colnames(LConfusionOutPredicted) <- c("0","1")
+LConfusionOutPredicted
+for (i in 1:4000){
+    probabilityDF$LRO[i] <- LOutPredicted[i]
+    }
+for (i in 1:4000){
+    probabilityDF$Actual[i] <- LOutActual[i]
+    }
+```
+
+```{r}
+# Plot ROC and AUC for LR
+probs <- LOutPredicted
+library(ROCR)
+LRPred <- prediction(probs, caravan_df_testLR$Number_of_mobile_home_policies)
+LRPerf <- performance(LRPred, "tpr", "fpr")
+plot(LRPerf, colorize=TRUE)
+abline(a=0, b=1, lty=2, lwd=3, col="black")
+```
+```{r}
+#AUC
+performance(LRPred, "auc")
+
+```
+```{r}
+#Corresponding Performance Measures
+LRPrediction <- factor(as.factor(LOutPredictedClass), c(0, 1), labels = c("Not Purchased", "Purchased"))
+LRActual <- factor(as.factor(caravan_df_testLR$Number_of_mobile_home_policies), c(0, 1), labels = c("Not Purchased", "Purchased"))
+library(crossval)
+CMLR <- confusionMatrix(LRActual, LRPrediction, negative = "Not Purchased" )
+diagnosticErrors(CMLR)
+```
+```{r}
+#Classify Using KNN
+#Normalizing each variable
+fun <- function(x)
+{    
+    a <- mean(x)    
+    b <- sd(x)    
+    (x - a)/(b)
+}
+library(class)
+
+caravan_df_train_normalized <- apply(caravan_df_train, 2, fun)
+caravan_df_test_normalized <- apply(caravan_df_test, 2, fun)
+
+train_input <- as.matrix(caravan_df_train_normalized[,-86])
+train_output <- as.vector(caravan_df_train_normalized[,86])
+test_input <- as.matrix(caravan_df_test_normalized[,-86])
+
+kmax <- 15
+ER1 <- rep(0,kmax)
+ER2 <- rep(0,kmax)
+
+for (i in 1:kmax){
+    prediction <- knn(train_input, train_input,train_output, k=i)
+    prediction2 <- knn(train_input, test_input, train_output, k=i)
+
+#Confusion Matrix For Test Data
+CM2 <- table(prediction2, caravan_df_test_normalized[,'Number_of_mobile_home_policies'])
+
+#Error Rate on the test sample
+ER2[i] <- (CM2[1,2]+CM2[2,1])/sum(CM2)
+}
+```
+
+```{r}
+#Plotting the %Error on the test sample
+plot(c(1,kmax),c(0,0.2),type="n", xlab="k",ylab="Error Rate")
+lines(ER2,col="blue")
+legend(12, 0.2, c("Test"),lty=c(1,1), col=c("blue"))
+```
+
+```{r}
+# Minimum Validation Error k
+z <- which.min(ER2)
+cat("Minimum Validation Error k:", z)
+```
+
+```{r}
+
+#Running knn for Minimum Validation Error k
+prediction2 <- knn(train_input, test_input, train_output, k=z)
+actual <- ifelse(caravan_df_test_normalized[,'Number_of_mobile_home_policies']>0,1,0)
+predicted <- ifelse(as.numeric(prediction2)==1,0,1)
+table(actual, predicted)
+```
+
+```{r}
+#Running knn for Minimum Validation Error k with prob=TRUE
+prediction2 <- knn(train_input, test_input, train_output, k=15, prob = TRUE)
+prob <- attr(prediction2, "prob")
+# Plot ROC and AUC for KNN
+library(ROCR)
+KNNPred <- prediction(prob, caravan_df_test_normalized[,'Number_of_mobile_home_policies'])
+KNNPerf <- performance(KNNPred, "tpr", "fpr")
+plot(KNNPerf, colorize=TRUE)
+abline(a=0, b=1, lty=2, lwd=3, col="black")
+for (i in 1:4000){
+    probabilityDF$KNN[i] <- prob[i]
+    }
+```
+
+```{r}
+#AUC
+performance(KNNPred, "auc")
+```
+
+```{r}
+#Corresponding Performance Measures
+KNNPrediction <- factor(as.factor(prediction2), labels = c("Not Purchased", "Purchased"))
+KNNActual <- factor(as.factor(caravan_df_test_normalized[,'Number_of_mobile_home_policies']), labels = c("Not Purchased", "Purchased"))
+library(crossval)
+CMNB <- confusionMatrix(KNNActual, KNNPrediction, negative = "Not Purchased" )
+diagnosticErrors(CMNB)
+```
+
+```{r}
+#Under Sampling Data
+#Taking all the observations with dependent variable = 1
+caravan_df_train_KNN_Under <- caravan_df_train[caravan_df_train$Number_of_mobile_home_policies==1,]
+
+#Randomly select observations with dependent variable = 0
+zeroObs <- caravan_df_train[caravan_df_train$Number_of_mobile_home_policies==0,]
+set.seed(123456)
+rearrangedZeroObs <-  zeroObs[sample(nrow(zeroObs), length(caravan_df_train_KNN_Under$Customer_Subtype)),]
+
+#Appending rows of randomly selected 0s in our undersampled data frame
+caravan_df_train_KNN_Under <- rbind(caravan_df_train_KNN_Under, rearrangedZeroObs)
+
+#Let's verify that number of 1s and 0s in our undersampled data are equal
+undersampled.Frequency.Number_of_mobile_home_policies <- data.frame(Number_of_mobile_home_policies = levels(as.factor(caravan_df_train_KNN_Under$Number_of_mobile_home_policies)), Count = as.numeric(table(caravan_df_train_KNN_Under$Number_of_mobile_home_policies)))
+undersampled.Frequency.Number_of_mobile_home_policies
+```
+```{r}
+#Classify Using KNN
+#Normalizing each variable
+fun <- function(x)
+{    
+    a <- mean(x)    
+    b <- sd(x)    
+    (x - a)/(b)
+}
+library(class)
+
+caravan_df_train_normalized <- apply(caravan_df_train_KNN_Under, 2, fun)
+caravan_df_test_normalized <- apply(caravan_df_test, 2, fun)
+
+train_input <- as.matrix(caravan_df_train_normalized[,-86])
+train_output <- as.vector(caravan_df_train_normalized[,86])
+test_input <- as.matrix(caravan_df_test_normalized[,-86])
+
+kmax <- 15
+ER1 <- rep(0,kmax)
+ER2 <- rep(0,kmax)
+
+for (i in 1:kmax){
+    prediction <- knn(train_input, train_input,train_output, k=i)
+    prediction2 <- knn(train_input, test_input, train_output, k=i)
+
+#Confusion Matrix For Test Data
+CM2 <- table(prediction2, caravan_df_test_normalized[,'Number_of_mobile_home_policies'])
+
+#Error Rate on the test sample
+ER2[i] <- (CM2[1,2]+CM2[2,1])/sum(CM2)
+}
+#Plotting the %Error on the test sample
+plot(c(1,kmax),c(0.15,0.8),type="n", xlab="k",ylab="Error Rate")
+lines(ER2, col="blue")
+legend(12, 0.75, c("Test"),lty=c(1,1), col=c("blue"))
+```
+
+```{r}
+# Minimum Validation Error k
+z <- which.min(ER2)
+cat("Minimum Validation Error k:", z)
+```
+
+```{r}
+
+#Running knn for Minimum Validation Error k
+prediction2 <- knn(train_input, test_input, train_output, k=z)
+actual <- ifelse(caravan_df_test_normalized[,'Number_of_mobile_home_policies']>0,1,0)
+predicted <- ifelse(as.numeric(prediction2)==1,0,1)
+table(actual, predicted)
+```
+```{r}
+#Running knn for Minimum Validation Error k with prob=TRUE
+prediction2 <- knn(train_input, test_input, train_output, k=15, prob = TRUE)
+prob <- attr(prediction2, "prob")
+# Plot ROC and AUC for KNN
+library(ROCR)
+KNNPred <- prediction(prob, caravan_df_test$Number_of_mobile_home_policies)
+KNNPerf <- performance(KNNPred, "tpr", "fpr")
+plot(KNNPerf, colorize=TRUE)
+abline(a=0, b=1, lty=2, lwd=3, col="black")
+for (i in 1:4000){
+    probabilityDF$KNNU[i] <- prob[i]
+    }
+```
+
+```{r}
+#AUC
+performance(KNNPred, "auc")
+```
+
+```{r}
+
+#Corresponding Performance Measures
+KNNPrediction <- factor(as.factor(prediction2), labels = c("Not Purchased", "Purchased"))
+KNNActual <- factor(as.factor(caravan_df_test_normalized[,'Number_of_mobile_home_policies']), labels = c("Not Purchased", "Purchased"))
+library(crossval)
+CMNB <- confusionMatrix(KNNActual, KNNPrediction, negative = "Not Purchased" )
+diagnosticErrors(CMNB)
+```
+
+```{r}
+#First let's recall the ratio of 1s and 0s in our original training dataset
+paste0("Ratio of 1s to 0s- 1:", as.numeric(table(caravan_df_train$Number_of_mobile_home_policies))[1]/as.numeric(table(caravan_df_train$Number_of_mobile_home_policies))[2])
+```
+
+```{r}
+#Now let's duplicate the observations with dependent variable = 1 to make the ratio approximately 1:2
+caravan_df_train_KNN_OverDummy <- caravan_df_train[caravan_df_train$Number_of_mobile_home_policies==1,]
+caravan_df_train_KNN_Over <- NULL
+for (i in 1:7){
+    caravan_df_train_KNN_Over <- rbind(caravan_df_train_KNN_Over, caravan_df_train_KNN_OverDummy)
+}
+caravan_df_train_KNN_Over <- rbind(caravan_df_train_KNN_Over, caravan_df_train[caravan_df_train$Number_of_mobile_home_policies==0,])
+
+#Let's verify the number of 1s and 0s in our oversampled data
+oversampled.Frequency.Number_of_mobile_home_policies <- data.frame(Number_of_mobile_home_policies = levels(as.factor(caravan_df_train_KNN_Over$Number_of_mobile_home_policies)), Count = as.numeric(table(caravan_df_train_KNN_Over$Number_of_mobile_home_policies)))
+oversampled.Frequency.Number_of_mobile_home_policies
+```
+
+```{r}
+#Let's verify the ratio of 1s to 0s after over sampling
+paste0("Ratio of 1s to 0s After Oversampling- 1:", as.numeric(table(caravan_df_train_KNN_Over$Number_of_mobile_home_policies))[1]/as.numeric(table(caravan_df_train_KNN_Over$Number_of_mobile_home_policies))[2])
+```
+
+```{r}
+#Classify Using KNN
+#Normalizing each variable
+fun <- function(x)
+{    
+    a <- mean(x)    
+    b <- sd(x)    
+    (x - a)/(b)
+}
+library(class)
+
+caravan_df_train_normalized <- apply(caravan_df_train_KNN_Over, 2, fun)
+caravan_df_test_normalized <- apply(caravan_df_test, 2, fun)
+
+train_input <- as.matrix(caravan_df_train_normalized[,-86])
+train_output <- as.vector(caravan_df_train_normalized[,86])
+test_input <- as.matrix(caravan_df_test_normalized[,-86])
+
+kmax <- 15
+ER1 <- rep(0,kmax)
+ER2 <- rep(0,kmax)
+
+for (i in 1:kmax){
+    prediction <- knn(train_input, train_input,train_output, k=i)
+    prediction2 <- knn(train_input, test_input, train_output, k=i)
+
+#Confusion Matrix For Test Data
+CM2 <- table(prediction2, caravan_df_test_normalized[,'Number_of_mobile_home_policies'])
+
+#Error Rate on the test sample
+ER2[i] <- (CM2[1,2]+CM2[2,1])/sum(CM2)
+}
+#Plotting the %Error on the test sample
+plot(c(1,kmax),c(0.15,0.8),type="n", xlab="k",ylab="Error Rate")
+lines(ER2, col="blue")
+legend(12, 0.75, c("Test"),lty=c(1,1), col=c("blue"))
+```
+
+
+```{r}
+
+# Minimum Validation Error k
+z <- which.min(ER2)
+cat("Minimum Validation Error k:", z)
+```
+
+```{r}
+#Running knn for Minimum Validation Error k
+prediction2 <- knn(train_input, test_input, train_output, k=z)
+actual <- ifelse(caravan_df_test_normalized[,'Number_of_mobile_home_policies']>0,1,0)
+predicted <- ifelse(as.numeric(prediction2)==1,0,1)
+table(actual, predicted)
+```
+
+```{r}
+#Running knn for Minimum Validation Error k with prob=TRUE
+prediction2 <- knn(train_input, test_input, train_output, k=15, prob = TRUE)
+prob <- attr(prediction2, "prob")
+# Plot ROC and AUC for KNN
+library(ROCR)
+KNNPred <- prediction(prob, caravan_df_test$Number_of_mobile_home_policies)
+KNNPerf <- performance(KNNPred, "tpr", "fpr")
+plot(KNNPerf, colorize=TRUE)
+abline(a=0, b=1, lty=2, lwd=3, col="black")
+for (i in 1:4000){
+    probabilityDF$KNNO[i] <- prob[i]
+    }
+```
+
+```{r}
+#AUC
+performance(KNNPred, "auc")
+```
+
+```{r}
+KNNPrediction <- factor(as.factor(prediction2), labels = c("Not Purchased", "Purchased"))
+KNNActual <- factor(as.factor(caravan_df_test_normalized[,'Number_of_mobile_home_policies']), labels = c("Not Purchased", "Purchased"))
+library(crossval)
+CMNB <- confusionMatrix(KNNActual, KNNPrediction, negative = "Not Purchased" )
+diagnosticErrors(CMNB)
+```
+
+```{r}
+#NB Pre-Processing
+caravan_df_trainNB <- caravan_df_train
+caravan_df_testNB <- caravan_df_test
+
+caravan_df_trainNB$Customer_Subtype <- as.factor(caravan_df_trainNB$Customer_Subtype)
+caravan_df_testNB$Customer_Subtype <- as.factor(caravan_df_testNB$Customer_Subtype)
+caravan_df_trainNB$Customer_main_type <- as.factor(caravan_df_trainNB$Customer_main_type)
+caravan_df_testNB$Customer_main_type <- as.factor(caravan_df_testNB$Customer_main_type)
+```
+
+```{r}
+#Classification Using Naive Bayes
+library(e1071)
+# Can handle both categorical and numeric input,
+# but output must be categorical
+caravan_df_trainNB$Number_of_mobile_home_policies <- factor(caravan_df_trainNB$Number_of_mobile_home_policies, labels = c(0,1))
+model <- naiveBayes(as.factor(Number_of_mobile_home_policies)~., data=caravan_df_trainNB)
+model
+```
+
+```{r}
+#NB Prediction
+tst <- caravan_df_testNB[,-86]
+prediction <- predict(model, newdata = tst)
+table(caravan_df_testNB$Number_of_mobile_home_policies, prediction, dnn=list('actual','predicted'))
+```
+
+```{r}
+# Plot ROC and AUC for KNN
+probs <- predict(model, tst, type="raw")
+library(ROCR)
+NBPred <- prediction(probs[,2], caravan_df_testNB$Number_of_mobile_home_policies)
+NBPerf <- performance(NBPred, "tpr", "fpr")
+plot(NBPerf, colorize=TRUE)
+abline(a=0, b=1, lty=2, lwd=3, col="black")
+for (i in 1:4000){
+    probabilityDF$NB[i] <- probs[i]
+    }
+```
+
+```{r}
+#AUC
+performance(NBPred, "auc")
+```
+
+```{r}
+NBPrediction <- factor(as.factor(prediction), c(0, 1), labels = c("Not Purchased", "Purchased"))
+NBActual <- factor(as.factor(caravan_df_testNB$Number_of_mobile_home_policies), c(0, 1), labels = c("Not Purchased", "Purchased"))
+library(crossval)
+CMNB <- confusionMatrix(NBActual, NBPrediction, negative = "Not Purchased" )
+diagnosticErrors(CMNB)
+```
+
+```{r}
+#Under Sampling Data
+#Taking all the observations with dependent variable = 1
+caravan_df_train_NB_Under <- caravan_df_trainNB[caravan_df_trainNB$Number_of_mobile_home_policies==1,]
+
+#Randomly select observations with dependent variable = 0
+zeroObs <- caravan_df_trainNB[caravan_df_trainNB$Number_of_mobile_home_policies==0,]
+set.seed(123457)
+rearrangedZeroObs <-  zeroObs[sample(nrow(zeroObs), length(caravan_df_train_NB_Under$Customer_Subtype)),]
+
+#Appending rows of randomly selected 0s in our undersampled data frame
+caravan_df_train_NB_Under <- rbind(caravan_df_train_NB_Under, rearrangedZeroObs)
+
+#Let's verify that number of 1s and 0s in our undersampled data are equal
+undersampled.Frequency.Number_of_mobile_home_policies <- data.frame(Number_of_mobile_home_policies = levels(as.factor(caravan_df_train_NB_Under$Number_of_mobile_home_policies)), Count = as.numeric(table(caravan_df_train_NB_Under$Number_of_mobile_home_policies)))
+undersampled.Frequency.Number_of_mobile_home_policies
+```
+
+```{r}
+#Running NB on Undersampled Data
+library(e1071)
+# Can handle both categorical and numeric input,
+# but output must be categorical
+NBModelUnder <- naiveBayes(as.factor(Number_of_mobile_home_policies)~car_policies+Income_._30+moped_policies+fire_policies+Lower_level_education, data=caravan_df_train_NB_Under)
+```
+
+```{r}
+#NB Prediction for undersampling
+tst <- caravan_df_testNB[,-86]
+prediction <- predict(NBModelUnder, newdata = tst)
+table(caravan_df_testNB$Number_of_mobile_home_policies, prediction, dnn=list('actual','predicted'))
+```
+
+```{r}
+
+# Plot ROC and AUC for Undersampled NB
+probs <- predict(NBModelUnder, tst, type="raw")
+library(ROCR)
+NBPred <- prediction(probs[,2], caravan_df_testNB$Number_of_mobile_home_policies)
+NBPerf <- performance(NBPred, "tpr", "fpr")
+plot(NBPerf, colorize=TRUE)
+abline(a=0, b=1, lty=2, lwd=3, col="black")
+for (i in 1:4000){
+    probabilityDF$NBU[i] <- probs[i]
+    }
+```
+
+```{r}
+#AUC
+performance(NBPred, "auc")
+```
+
+```{r}
+#Corresponding Performance Measures
+NBPrediction <- factor(as.factor(prediction), c(0, 1), labels = c("Not Purchased", "Purchased"))
+NBActual <- factor(as.factor(caravan_df_testNB$Number_of_mobile_home_policies), c(0, 1), labels = c("Not Purchased", "Purchased"))
+library(crossval)
+CMNB <- confusionMatrix(NBActual, NBPrediction, negative = "Not Purchased" )
+diagnosticErrors(CMNB)
+```
+
+```{r}
+
+#First let's recall the ratio of 1s and 0s in our original training dataset
+paste0("Ratio of 1s to 0s- 1:", as.numeric(table(caravan_df_trainNB$Number_of_mobile_home_policies))[1]/as.numeric(table(caravan_df_trainNB$Number_of_mobile_home_policies))[2])
+```
+
+```{r}
+#Now let's duplicate the observations with dependent variable = 1 to make the ratio approximately 1:2
+caravan_df_train_NB_OverDummy <- caravan_df_trainNB[caravan_df_trainNB$Number_of_mobile_home_policies==1,]
+caravan_df_train_NB_Over <- NULL
+for (i in 1:7){
+    caravan_df_train_NB_Over <- rbind(caravan_df_train_NB_Over, caravan_df_train_NB_OverDummy)
+}
+caravan_df_train_NB_Over <- rbind(caravan_df_train_NB_Over, caravan_df_trainNB[caravan_df_trainNB$Number_of_mobile_home_policies==0,])
+
+#Let's verify the number of 1s and 0s in our oversampled data
+oversampled.Frequency.Number_of_mobile_home_policies <- data.frame(Number_of_mobile_home_policies = levels(as.factor(caravan_df_train_NB_Over$Number_of_mobile_home_policies)), Count = as.numeric(table(caravan_df_train_NB_Over$Number_of_mobile_home_policies)))
+oversampled.Frequency.Number_of_mobile_home_policies
+```
+
+```{r}
+#Let's verify the ratio of 1s to 0s after over sampling
+paste0("Ratio of 1s to 0s After Oversampling- 1:", as.numeric(table(caravan_df_train_NB_Over$Number_of_mobile_home_policies))[1]/as.numeric(table(caravan_df_train_NB_Over$Number_of_mobile_home_policies))[2])
+```
+
+```{r}
+#Running NB on Oversampled Data
+library(e1071)
+# Can handle both categorical and numeric input,
+# but output must be categorical
+NBModelOver <- naiveBayes(as.factor(Number_of_mobile_home_policies)~car_policies+Income_._30+moped_policies+fire_policies+Lower_level_education, data=caravan_df_train_NB_Over)
+NBModelOver
+```
+
+```{r}
+#NB Prediction for oversampling
+tst <- caravan_df_testNB[,-86]
+prediction <- predict(NBModelOver, newdata = tst)
+table(caravan_df_testNB$Number_of_mobile_home_policies, prediction, dnn=list('actual','predicted'))
+```
+
+```{r}
+
+# Plot ROC and AUC for Oversampled NB
+probs <- predict(NBModelOver, tst, type="raw")
+library(ROCR)
+NBPred <- prediction(probs[,2], caravan_df_testNB$Number_of_mobile_home_policies)
+NBPerf <- performance(NBPred, "tpr", "fpr")
+plot(NBPerf, colorize=TRUE)
+abline(a=0, b=1, lty=2, lwd=3, col="black")
+for (i in 1:4000){
+    probabilityDF$NBO[i] <- probs[i]
+    }
+```
+
+```{r}
+
+#AUC
+performance(NBPred, "auc")
+```
+
+```{r}
+#Corresponding Performance Measures
+NBPrediction <- factor(as.factor(prediction), c(0, 1), labels = c("Not Purchased", "Purchased"))
+NBActual <- factor(as.factor(caravan_df_testNB$Number_of_mobile_home_policies), c(0, 1), labels = c("Not Purchased", "Purchased"))
+library(crossval)
+CMNB <- confusionMatrix(NBActual, NBPrediction, negative = "Not Purchased" )
+diagnosticErrors(CMNB)
+```
+
+```{r}
+#Naive Bayes Using SMOTE method for oversampling
+library(DMwR)
+set.seed(123457)
+caravan_df_trainNB$Number_of_mobile_home_policies <- as.factor(caravan_df_trainNB$Number_of_mobile_home_policies)
+caravan_df_train_NB_SMOTE <- SMOTE(Number_of_mobile_home_policies~., caravan_df_trainNB, perc.over = 600, perc.under = 262.2)
+```
+
+```{r}
+
+#Let's verify the number of 1s and 0s in our SMOTE data
+SMOTE.Frequency.Number_of_mobile_home_policies <- data.frame(Number_of_mobile_home_policies = levels(as.factor(caravan_df_train_NB_SMOTE$Number_of_mobile_home_policies)), Count = as.numeric(table(caravan_df_train_NB_SMOTE$Number_of_mobile_home_policies)))
+SMOTE.Frequency.Number_of_mobile_home_policies
+```
+
+```{r}
+#Running NB on SMOTE Data
+library(e1071)
+# Can handle both categorical and numeric input,
+# but output must be categorical
+NBModelSMOTE <- naiveBayes(as.factor(Number_of_mobile_home_policies)~., data=caravan_df_train_NB_SMOTE)
+NBModelSMOTE
+```
+
+```{r}
+#NB Prediction for SMOTE
+tst <- caravan_df_testNB[,-86]
+prediction <- predict(NBModelSMOTE, newdata = tst)
+table(caravan_df_testNB$Number_of_mobile_home_policies, prediction, dnn=list('actual','predicted'))
+```
+
+```{r}
+# Plot ROC and AUC for SMOTE NB
+probs <- predict(NBModelSMOTE, tst, type="raw")
+library(ROCR)
+NBPred <- prediction(probs[,2], caravan_df_testNB$Number_of_mobile_home_policies)
+NBPerf <- performance(NBPred, "tpr", "fpr")
+plot(NBPerf, colorize=TRUE)
+abline(a=0, b=1, lty=2, lwd=3, col="black")
+for (i in 1:4000){
+    probabilityDF$NBS[i] <- probs[i]
+}
+
+```
+
+
+```{r}
+#AUC
+performance(NBPred, "auc")
+```
+
+```{r}
+
+#Corresponding Performance Measures
+NBPrediction <- factor(as.factor(prediction), c(0, 1), labels = c("Not Purchased", "Purchased"))
+NBActual <- factor(as.factor(caravan_df_testNB$Number_of_mobile_home_policies), c(0, 1), labels = c("Not Purchased", "Purchased"))
+library(crossval)
+CMNB <- confusionMatrix(NBActual, NBPrediction, negative = "Not Purchased" )
+diagnosticErrors(CMNB)
+write.csv(probabilityDF, file = "probabilityDF.csv")
+```
+
+
+
+```{r}
+#Boosting using unbalanced data
+library(tree)
+library(gbm)
+library(ROSE)
+library(caret)
+
+TrainDataset <- read.csv('C:/Users/45336/Desktop/7275project/train.csv')
+attach(TrainDataset)
+
+TestDataset <- read.csv('C:/Users/45336/Desktop/7275project/test.csv')
+attach(TestDataset)
+
+set.seed(123457)
+
+#Boosting on training set
+boost.train1 <- gbm(Number_of_mobile_home_policies ~., data = TrainDataset, distribution = "bernoulli", n.trees = 1000, interaction.depth = 4)
+summary(boost.train1)
+
+#car policies and fire policies seems to be the most important variables
+#producing partial dependance plots for the above 2 variables
+par(mfrow = c(1,2))
+plot(boost.train1, i = "car_policies")
+plot(boost.train1, i = "fire_policies")
+
+#Boosting to predict on test dataset
+yhat.boost.test1 <- predict.gbm(boost.train1, newdata = TestDataset, n.trees = 1000 )
+mean((yhat.boost.test1 - TestDataset)^2)
+#test MSE obtained is 34.138
+
+
+
+#Confusion Matrix
+PredictedClass.test1 <- ifelse(yhat.boost.test1 > 0.5, 1, 0)
+actual <- (TestDataset$Number_of_mobile_home_policies)
+actual <- as.factor(actual)
+PredictedClass.test1 <- as.factor(PredictedClass.test1)
+levels(PredictedClass.test1)
+str(PredictedClass.test1)
+str(actual)
+
+confusionMatrix(PredictedClass.test1, actual, positive = "1")
+```
+
+```{r}
+data_balanced_under <- ovun.sample(Number_of_mobile_home_policies ~., data = TrainDataset, method = "under", N = 696, seed = 1)$data
+table(data_balanced_under$Number_of_mobile_home_policies)
+
+#Boosting on under sampled data
+boost.train.under <- gbm(Number_of_mobile_home_policies ~., data = data_balanced_under, distribution = "bernoulli", n.trees = 1000, interaction.depth = 4)
+summary(boost.train.under)
+
+#Predictions on under sampled data
+yhat.boost.test.under <- predict(boost.train.under, newdata = TestDataset, n.trees = 1000)
+mean((yhat.boost.test.under - TestDataset)^2)
+
+#Confusion Matrix - under sampled
+PredictedClass.under <- ifelse(yhat.boost.test.under > 0.5, 1, 0)
+
+actual <- (TestDataset$Number_of_mobile_home_policies)
+actual <- as.factor(actual)
+PredictedClass.under <- as.factor(PredictedClass.under)
+levels(PredictedClass.under)
+str(PredictedClass.under)
+str(actual)
+
+confusionMatrix(PredictedClass.under, actual, positive = "1")
+
+#Evaluating Accuracy of under sampled using ROC
+roc.curve(TestDataset$Number_of_mobile_home_policies, yhat.boost.test.under)
+```
+
+```{r}
+#Over Sampling 
+data_balanced_over <- ovun.sample(Number_of_mobile_home_policies ~. , data = TrainDataset, method = "over", N = 10948)$data
+#N refers to number of observations in the resulting balanced dataset. We had originally 5474 negative observations. 
+table(data_balanced_over$Number_of_mobile_home_policies)
+
+#Boosting on over sampled data
+boost.train.over <- gbm(Number_of_mobile_home_policies ~., data = data_balanced_over, distribution = "bernoulli", n.trees = 1000, interaction.depth = 4)
+summary(boost.train.over)
+
+#Predictions on over sampled data
+yhat.boost.test.over <- predict(boost.train.over, newdata = TestDataset, n.trees = 1000)
+mean((yhat.boost.test.over - TestDataset)^2)
+
+#Confusion Matrix - Over sampled
+PredictedClass.over <- ifelse(yhat.boost.test.over > 0.5, 1, 0)
+actual <- (TestDataset$Number_of_mobile_home_policies)
+actual <- as.factor(actual)
+PredictedClass.over <- as.factor(PredictedClass.over)
+levels(PredictedClass.over)
+str(PredictedClass.over)
+str(actual)
+
+confusionMatrix(PredictedClass.over, actual, positive = "1")
+
+#Evaluating Accuracy of over sampled using ROC
+roc.curve(TestDataset$Number_of_mobile_home_policies, yhat.boost.test.over)
+```
+
+```{r}
+#Random Forest using unbalanced data
+library(randomForest)
+library(plyr)
+library(caret)
+TrainDataset <- read.csv('C:/Users/45336/Desktop/7275project/train.csv')
+attach(TrainDataset)
+
+TestDataset <- read.csv('C:/Users/45336/Desktop/7275project/test.csv')
+attach(TestDataset)
+set.seed(123457)
+
+#RandomForest
+rf.train <- randomForest(Number_of_mobile_home_policies ~., data = TrainDataset, mtry = 9, importance = TRUE)
+rf.train
+
+yhat.rf <- predict(rf.train, newdata = TestDataset)
+mean((yhat.rf-TestDataset)^2)
+# test MSE = 15.46
+
+importance(rf.train)
+
+
+#Confusion Matrix
+PredictedClass <- ifelse(yhat.rf > 0.5, 1, 0)
+actual <- (TestDataset$Number_of_mobile_home_policies)
+actual <- as.factor(actual)
+PredictedClass <- as.factor(PredictedClass)
+levels(PredictedClass)
+str(PredictedClass)
+str(actual)
+
+confusionMatrix(PredictedClass, actual, positive = "1")
+
+#ROC Curve
+roc.curve(TestDataset$Number_of_mobile_home_policies, yhat.rf, plotit = F)
+```
+
+```{r}
+#Under sampling 
+data_balanced_under <- ovun.sample(Number_of_mobile_home_policies ~., data = TrainDataset, method = "under", N = 696, seed = 1)$data
+table(data_balanced_under$Number_of_mobile_home_policies)
+
+#RandomForest on under sampled data
+rf.train.under <- randomForest((Number_of_mobile_home_policies) ~., data = data_balanced_under, mtry = 9, importance = TRUE)
+rf.train.under
+
+yhat.rf.under <- predict(rf.train.under, newdata = TestDataset)
+mean((yhat.rf.under-TestDataset)^2)
+# test MSE = 15.46
+
+importance(rf.train.under)
+
+#Confusion Matrix
+PredictedClass.under <- ifelse(yhat.rf.under > 0.5, 1, 0)
+actual <- (TestDataset$Number_of_mobile_home_policies)
+actual <- as.factor(actual)
+PredictedClass.under <- as.factor(PredictedClass.under)
+levels(PredictedClass.under)
+str(PredictedClass.under)
+str(actual)
+
+confusionMatrix(PredictedClass.under, actual, positive = "1")
+
+#ROC Curve
+roc.curve(TestDataset$Number_of_mobile_home_policies, yhat.rf.under, plotit = F)
+```
+
+```{r}
+#Over Sampling 
+data_balanced_over <- ovun.sample(Number_of_mobile_home_policies ~. , data = TrainDataset, method = "over", N = 10948)$data
+
+#RandomForest on over sampled data
+rf.train.over <- randomForest((Number_of_mobile_home_policies) ~., data = data_balanced_over, mtry = 9, importance = TRUE)
+rf.train.over
+
+yhat.rf.over <- predict(rf.train.over, newdata = TestDataset)
+mean((yhat.rf.over-TestDataset)^2)
+# test MSE = 15.46
+
+importance(rf.train.over)
+
+#Confusion Matrix
+PredictedClass.over <- ifelse(yhat.rf.over > 0.5, 1, 0)
+actual <- (TestDataset$Number_of_mobile_home_policies)
+actual <- as.factor(actual)
+PredictedClass.over <- as.factor(PredictedClass.over)
+levels(PredictedClass.over)
+str(PredictedClass.over)
+str(actual)
+
+confusionMatrix(PredictedClass.over, actual, positive = "1")
+
+#ROC Curve
+roc.curve(TestDataset$Number_of_mobile_home_policies, yhat.rf.over, plotit = F)
+```
+```{r}
+library(ggrepel)
+library(ggplot2)
+library(plyr)
+Sensitivity <- c(0.012605042,	0.6806723,	0.3529412,	0,	0.72268908,	0.3067227,	0.9327731,	0.68487395,	0.5504202,	0.7941176,	0.02521,	0.5462,	0.23950,	0.02941,	0.6555,	0.15546)
+PPV <- c(0.375, 0.1029225, 0.16846747, 0, 0.09014675, 0.1301248, 0.066787, 0.08820346, 0.1132239, 0.0722201, 0.17647, 0.1075, 0.155031, 0.36842, 0.1078, 0.18782 )
+Model<- c("LR" , 	"LRU" , "	LRO" ,	"KNN" ,	"KNNU" , 	"KNNO" , 	"NB" , 	"NBU" , 	"NBO" ,	"NBS" ,	"boost_prob" ,	"boost_prob_over" ,	"boost_prob_under",	"RF", "RF_prob_over" ,	"RF_prob_under")
+
+## PLoting ppv anf sensitivity from all models cutoff = 0.5 from file ppv_sev.csv
+df1 <- data.frame(col1= Sensitivity, col2= PPV , col3= Model)
+
+ggplot(df1, aes(x=Sensitivity, y=PPV , color = Model , label = Model )) + 
+  ##geom_point(aes(size=17.5))+
+  geom_point() +geom_label_repel(aes(label=Model),hjust=0, vjust=0)
+```
+
